@@ -119,6 +119,17 @@ function easer.debugString(self)
 	return s .. "\n"
 end
 
+function easer.scale(self,v0,v1,vt,method)
+	local method = method or "linear"
+	return self.methods[method]({t = vt - v0, time = v1, v0 = 0, v1 = 1})
+end
+
+function easer.rescale(self,r,method)
+	local method = method or "linear"
+	return self.methods[method]({t = r, time = 1, v0 = 0, v1 = 1})
+end
+
+
 function easer.methods.linear(i)
 	return (i.t / i.time) * (i.v1 - i.v0) + i.v0
 end

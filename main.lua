@@ -1,10 +1,29 @@
+--[[
+-Task 1-
+Re-do input code
+
+-Task 2-
+Hack together some gameplay mechanic
+Figure out what to do with these shaders
+
+-Task 3-
+Clean up Task 2 code
+
+-Task N-
+1. Polished & Complete Experience
+2. Local Multiplayer
+
+]]--
+
 local tlz = require("tlz")
 local easer = require("easer")
-debugstring = ""
+local input1 = require("input")
 
+debugstring = ""
+math.randomseed( tonumber(tostring(os.time()):reverse():sub(1,6)) )
 function love.load(arg)
 	love.graphics.setBackgroundColor(255, 255, 255)
-	love.window.setPosition(0,30)
+	--love.window.setPosition(0,30)
 	buffer = love.graphics.newCanvas()
 	canvas = love.graphics.newCanvas()
 	canvas:clear()
@@ -147,7 +166,6 @@ function love.gamepadreleased( joystick, button )
 	if(input._controllerIndex[id].index == 1)then
 		if(button == "rightshoulder")then
 			easer:setPos(scale,0)
-			idle = 0
 
 			canvas:clear()
 			
@@ -163,14 +181,14 @@ function love.gamepadreleased( joystick, button )
 	end
 end
 
-snaptimer = easer:new(0,1,360*2)
+snaptimer = easer:new(0,1,3)
 phase = easer:new(0,360,360,{loop = "linear"})
-scale = easer:new(1,360*2,360*2,{method = "inCubic", loop = "alternate"})
+scale = easer:new(1,1920,360)
 speed = 600
 leftstick = {x = love.graphics.getWidth() / 2, y = love.graphics.getHeight() / 2}
 rightstick = {x = love.graphics.getWidth() / 2, y = love.graphics.getHeight() / 2}
 xVel = 0
-yVel = 02
+yVel = 0
 idle = 0
 -- Drawing
 hue = 90
@@ -180,8 +198,10 @@ dir = 1
 sop = 0
 rot = easer:new(0+90,360*2+90,360*2,{loop = "linear"})
 innerrot = easer:new(0+90,360+90,360/7,{loop = "linear"})
+spintimer = easer:new(0,90+10,90+10,{loop = "linear"})
 rdir = 0
 rad = 300
+radius = 24
 function love.update(dt)
 	debugstring = ""
 	
@@ -198,8 +218,9 @@ function love.update(dt)
 	if not paused then
 		easer:update(dt)
 		
-		if(easer:get(snaptimer) == 1)then
+		if(easer:get(snaptimer) == 1 and (easer:get(rot)+180 - easer:get(innerrot)) % 360 < 1)then
 			canvas:clear()
+			easer:setPos(scale,0)
 		
 			love.graphics.setCanvas(canvas)
 			love.graphics.setColor(255,255,255)
@@ -214,7 +235,7 @@ function love.update(dt)
 		--phase = phase + 1 * dt
 		--phase = phase % 360
 		
-		rad = rad + dt * (input.controller[1].triggerright - input.controller[1].triggerleft) * 2
+		rad = rad + dt * (input.controller[1].triggerright - input.controller[1].triggerleft) * 23
 		
 		local x = input.controller[1].rightx
 		local y = input.controller[1].righty
@@ -233,45 +254,52 @@ function love.update(dt)
 		x = input.controller[1].leftx
 		y = input.controller[1].lefty
 		
-		if x + y ~= 0 then
+		if x+y ~= 0 then
 			local a = math.atan2(y,x)
 			
-			dir = lasthue < hue and 1 or -1
+
 			hue = math.deg(a) % 360
-			lasthue = hue
+			
+			if hue ~= lasthue then
+				dir = hue > lasthue and ((lasthue < 90 and hue > 270) and -1 or 1) or ((lasthue > 270 and hue < 90) and 1 or -1)
+				lasthue = hue
+			end
 			idle = 0
 		else
-			hue = (hue + dt * (33/(360^2 - easer:get(phase)^2) + 3) * dir) % 360
+			local ars = 355 * speed/(2*math.pi*radius) + 5
+			if(easer:get(spintimer) > 90)then
+				ars = easer:rescale((easer:get(spintimer)-90)/10,"inCubic")*ars
+			else
+				ars = idle%10
+			end
+			debugstring = debugstring .. "\nARS: " .. ars .. "\n"
+			hue = (hue + dt * ars * dir) % 360
 			idle = idle + dt
 		end
 		
 		leftstick.x = leftstick.x + math.cos(math.rad(hue)) * speed * dt
 		leftstick.y = leftstick.y + math.sin(math.rad(hue)) * speed * dt
 		
-		local radius = 12
-		local z = -45
-		local q = -7 * dir
-		if leftstick.x < 0 - radius then
-			leftstick.x = 0 - radius
-			dir = -dir
+		
+		if leftstick.x - radius < 0 then
+			leftstick.x = 0 + radius
+			dir = math.random() < 1/5 and dir or -dir
 			hue = tlz.flipDir(hue,-1,1)
-		elseif leftstick.x > 1920 + radius then
-			leftstick.x = 1920 + radius
-			dir = -dir
+		elseif leftstick.x + radius > 1920 then
+			leftstick.x = 1920 - radius
+			dir = math.random() < 1/5 and dir or -dir
 			hue = tlz.flipDir(hue,-1,1)
 		end
 		
-		if leftstick.y < 0 - radius then
-			leftstick.y = 0 - radius
-			dir = -dir
+		if leftstick.y - radius < 0 then
+			leftstick.y = 0 + radius
+			dir = math.random() < 1/5 and dir or -dir
 			hue = tlz.flipDir(hue,1,-1)
-		elseif leftstick.y > 1080 + radius then
-			leftstick.y = 1080 + radius
-			dir = -dir
+		elseif leftstick.y + radius > 1080 then
+			leftstick.y = 1080 - radius
+			dir = math.random() < 1/5 and dir or -dir
 			hue = tlz.flipDir(hue,1,-1)
 		end
-		
-		rad = 300
 		
 		mode7:send("originX",rightstick.x)
 		mode7:send("originY",rightstick.y)
@@ -306,16 +334,16 @@ function love.draw()
 		--love.graphics.circle("fill", rightstick.x, rightstick.y, 6, 100)
 		local g = math.rad(easer:get(innerrot))
 		love.graphics.setBlendMode("replace")
-		love.graphics.line(300*math.cos(g) + rightstick.x,300*math.sin(g) + rightstick.y,rightstick.x,rightstick.y)
+		love.graphics.line(rad*math.cos(g) + rightstick.x,rad*math.sin(g) + rightstick.y,rightstick.x,rightstick.y)
 		love.graphics.setBlendMode("alpha")
-		if(easer:get(rot) >= 360) then
+		if(easer:get(rot) >= 360+90) then
 			love.graphics.setColor(255,255,255)
 		else
 			love.graphics.setColor(0,0,0)
 		end
 		--for i=0,6 do
 			g = math.rad(easer:get(rot))
-			love.graphics.line(300*math.cos(g) + rightstick.x,300*math.sin(g) + rightstick.y,2000*math.cos(g) + rightstick.x,2000*math.sin(g) + rightstick.y)
+			love.graphics.line(rad*math.cos(g) + rightstick.x,rad*math.sin(g) + rightstick.y,2000*math.cos(g) + rightstick.x,2000*math.sin(g) + rightstick.y)
 		--end
 	love.graphics.setCanvas(buffer)
 		love.graphics.clear()
@@ -338,10 +366,11 @@ function love.draw()
 	debugstring = debugstring .. "\n" .. "W: " .. love.graphics.getWidth() .. "\tH: " .. love.graphics.getHeight()
 	if debug then
 		love.graphics.setColor(255,255,255,255*0.7)
-		love.graphics.rectangle("fill",0,0,400,1080)
+		love.graphics.rectangle("fill",0,0,200*3,1080)
 		love.graphics.setColor(0,0,0)
-		love.graphics.print(debugstring,0,0)
-		love.graphics.print(easer:debugString(),200,0)
+		love.graphics.print(debugstring,200 * 0,0)
+		love.graphics.print(easer:debugString(),200 * 1,0)
+		love.graphics.print(input1:debugString(),200 * 2,0)
 		love.graphics.setColor(255,255,255)
 	end
 end
