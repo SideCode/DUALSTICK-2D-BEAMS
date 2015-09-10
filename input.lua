@@ -2,7 +2,7 @@ local tlz = require("tlz")
 
 local input = {}
 input.player = {}
-input.index = 0
+input.index = 1
 input.capacity = 2
 input.size = 0
 input.freeIndexes = {}
@@ -12,44 +12,49 @@ function input.load(self,playerMax)
 end
 
 function input.joystickadded(self,joystick)
-	if(joystick:isGamepad() and self.size ~= self.capacity)then
-		local index = self.index
-		if(self.index == self.capacity)then
-			index = table.remove(self.freeIndexes)
-		else
-			index = index + 1
-			self.index = index
+	if(joystick:isGamepad())then
+		if(self.size ~= self.capacity)then			--A+
+			local index = self.index
+			while(self.player[index] ~= nil)do
+				index = index + 1
+			end
+			
+			self.player[index] = self._gamepad:newplayer(index,joystick)
+			
+			self.size = self.size + 1
+			self.index = index + 1
 		end
-		
-		self.player[index] = {
-			index = index,
-			controller = {self._gamepad,joystick}
-		}
-		self._gamepad.player[joystick:getID()] = index
 	end
 end
 
-function input.joystickremoved(joystick)
-	local player = self._gamepad.player
+function input.joystickremoved(self,joystick)
+	local player = self.player
 	local id = joystick:getID()
-	local index = player[id]
-	if(player[id] ~= nil)then
-		tlz.clearTable(self.player[index])
-		self.player[index] = nil
-		table.insert(self.freeIndexes,index)
+	local _gamepad = self._gamepad
+	local index = _gamepad.player[id]
+	
+	if(player[index] ~= nil)then
+		tlz.clearTable(player[index].args)
+		tlz.clearTable(player[index])
+		_gamepad.player[id] = nil
+		player[index] = nil
 		
-		player[id] = nil
+		if(index < self.index)then
+			self.index = index
+		end
+
+		self.size = self.size - 1
 	end
 end
 
 function input.isDown(self,player,button)
-	local controller = self.player[player].controller
-	return controller[1].isDown(controller[2],button)
+	local player = self.player[player]
+	return player ~= nil and player.controller.isDown(player.args,button) or false
 end
 
-function input.getAxis(self,player,axis)
-	local controller = self.player[player].controller
-	return controller[1].getAxis(controller[2],axis)
+function input.getAxis(self,player,axis,flags)
+	local player = self.player[player]
+	return player ~= nil and player.controller.getAxis(player.args,axis,flags) or 0
 end
 
 function input.gamepadpressed(self,joystick,button)
@@ -60,14 +65,56 @@ function input.gamepadreleased(self,joystick,button)
 end
 
 input._gamepad = {
-	player = {}
+	player = {},
+	name = "Gamepad",
+	defaultConfig = {
+		deadzones = {
+			leftx = 0.2,
+			lefty = 0.2,
+			rightx = 0.2,
+			righty = 0.2
+		}
+	}
 }
 
-function input._gamepad.isDown(joystick,button)
-	return joystick:isGamepadDown(button)
+function input._gamepad.newplayer(self,index,joystick,config)
+	local config = config or self.defaultConfig
+	
+	local player = {
+		index = index,
+		controller = self,
+		args = {
+			joystick = joystick,
+			deadzones = config.deadzones or self.defaultConfig.deadzones
+		}
+	}
+	
+	self.player[joystick:getID()] = index
+	
+	return player
 end
-function input._gamepad.getAxis(joystick,axis)
-	return joystick:getGamepadAxis(axis)
+
+function input._gamepad.isDown(args,button)
+	return args.joystick:isGamepadDown(button)
+end
+function input._gamepad.getAxis(args,axis,flags)
+	local raw = false
+	
+	if(flags ~= nil)then
+		raw = flags.raw or raw
+	end
+	
+	if(raw)then
+		return args.joystick:getGamepadAxis(axis)
+	end
+	
+	local v = args.joystick:getGamepadAxis(axis)
+		
+	if(math.abs(v) > args.deadzones[axis])then
+		return args.joystick:getGamepadAxis(axis)
+	end
+		
+	return 0
 end
 
 function input.pressed(player,button)end
@@ -75,10 +122,10 @@ function input.released(player,button)end
 
 function input.debugString(self)
 	local s = "---input---"
-		.. "\n size: " .. self.size
-		.. "\n capacity: " .. self.capacity
-		.. "\n index: " .. self.index
-		.. "\n freeIndexes:"
+		.. "\nsize: " .. self.size
+		.. "\ncapacity: " .. self.capacity
+		.. "\nindex: " .. self.index
+		.. "\nfreeIndexes:"
 	local i = 0
 	for _, v in pairs(self.freeIndexes) do
 		s = s .. " " .. v
@@ -89,14 +136,41 @@ function input.debugString(self)
 	end
 
 	for k, v in pairs(self.player) do
-		s = s .. "\n player#" .. k
-			.. "\n  controller: " .. v.controller[2]:getID()
+		s = s .. "\nPlayer#" .. k
+			.. "\n controller: " .. v.controller.name
 	end
 	
 	for k, v in pairs(self._gamepad.player) do
-		s = s .. "\n gamepad#" .. k
-			.. "\n  player: " .. v
+		local leftx = self:getAxis(v,"leftx")
+		local leftx_raw = self:getAxis(v,"leftx",{raw = true})
+		local lefty = self:getAxis(v,"lefty")
+		local lefty_raw = self:getAxis(v,"lefty",{raw = true})
+		
+		local rightx = self:getAxis(v,"rightx")
+		local rightx_raw = self:getAxis(v,"rightx",{raw = true})
+		local righty = self:getAxis(v,"righty")
+		local righty_raw = self:getAxis(v,"righty",{raw = true})
+		
+		s = s .. "\nGamepad#" .. k
+			.. "\n player: " .. v
+			.. "\n leftx: " .. leftx
+			.. "\n  raw: " .. leftx_raw
+			.. "\n lefty: " .. lefty
+			.. "\n  raw: " .. lefty_raw
+			.. "\n = left(dir): " .. math.deg(math.atan2(lefty,leftx))
+			.. "\n =       raw: " .. math.deg(math.atan2(lefty_raw,leftx_raw))
+			.. "\n rightx: " .. rightx
+			.. "\n  raw: " .. rightx_raw
+			.. "\n righty: " .. righty
+			.. "\n  raw: " .. righty_raw
+			.. "\n = right(dir): " .. math.deg(math.atan2(righty,rightx))
+			.. "\n =         raw: " .. math.deg(math.atan2(righty_raw,rightx_raw))
+			.. "\n leftshoulder: " .. (self:isDown(k,"leftshoulder") and "true" or "false")
+			.. "\n rightshoulder: " .. (self:isDown(k,"rightshoulder") and "true" or "false")
+			.. "\n start: " .. (self:isDown(k,"start") and "true" or "false")
 	end
+	
+	s = s .. "\n#Of [All] Detected Controllers: " .. love.joystick.getJoystickCount()
 	
 	return s .. "\n"
 end

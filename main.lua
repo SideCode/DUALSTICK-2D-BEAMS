@@ -1,5 +1,5 @@
 --[[
--Task 1-
+-Task 1- DONE
 Re-do input code
 
 -Task 2-
@@ -17,7 +17,7 @@ Clean up Task 2 code
 
 local tlz = require("tlz")
 local easer = require("easer")
-local input1 = require("input")
+local input = require("input")
 
 debugstring = ""
 math.randomseed( tonumber(tostring(os.time()):reverse():sub(1,6)) )
@@ -78,66 +78,13 @@ function love.load(arg)
     ]])
 end
 
-input = {
-	stickdeadzone = 0.2,
-	triggerdeadzone = 0.1,
-	count = 0,
-	controller = {},
-	_controllerIndex = {}
-}
-
-function input.add(joystick)
-	if joystick:isGamepad() then
-		local id = joystick:getID()
-		input.count = input.count + 1
-		input._controllerIndex[id] = {index = input.count}
-		input._controllerIndex[id].joystick = joystick
-		input.controller[input.count] = {
-			leftx = 0,
-			lefty = 0,
-			rightx = 0,
-			righty = 0,
-			triggerleft = 0,
-			triggerright = 0
-		}
-	end	
-end
-
-function input.remove(joystick)
-	local id = joystick:getID()
-	local index = input._controllerIndex[id]
-	if index ~= nil then
-		input._controllerIndex[id] = nil
-		clearTable(input.controller[index])
-		input.controller[index] = nil
-		input._joysticks[index] = nil
-	end
-end
-
-function input.update()
-	for k,v in pairs(input._controllerIndex) do
-		local controller = input.controller[v.index]
-		
-		for key in pairs(controller) do
-			controller[key] = v.joystick:getGamepadAxis(key)
-		end
-		
-		controller.leftx = math.abs(controller.leftx) > input.stickdeadzone and controller.leftx or 0
-		controller.lefty = math.abs(controller.lefty) > input.stickdeadzone and controller.lefty or 0
-		controller.rightx = math.abs(controller.rightx) > input.stickdeadzone and controller.rightx or 0
-		controller.righty = math.abs(controller.righty) > input.stickdeadzone and controller.righty or 0
-		
-		controller.triggerleft = math.abs(controller.triggerleft) > input.triggerdeadzone and controller.triggerleft or 0
-		controller.triggerright = math.abs(controller.triggerright) > input.triggerdeadzone and controller.triggerright or 0
-	end
-end
 
 function love.joystickadded(joystick)
-	input.add(joystick)
+	input:joystickadded(joystick)
 end
 
 function love.joystickremoved(joystick)
-	input.remove(joystick)
+	input:joystickremoved(joystick)
 end
 
 debug = false
@@ -154,16 +101,16 @@ function love.keypressed(key,r)
 	end
 end
 
-function love.gamepadpressed( joystick, button )
-	local id = joystick:getID()
-	if input._controllerIndex[id].index == 1 and button == "rightshoulder" then
-		rdir = 1
-	end
+function love.gamepadpressed(joystick,button)
+	input:gamepadpressed(joystick,button)
 end
 
-function love.gamepadreleased( joystick, button )
-	local id = joystick:getID()
-	if(input._controllerIndex[id].index == 1)then
+function love.gamepadreleased(joystick,button)
+	input:gamepadreleased(joystick,button)
+end
+
+function input.pressed(player,button)
+	if(player == 1)then
 		if(button == "rightshoulder")then
 			easer:setPos(scale,0)
 
@@ -205,16 +152,6 @@ radius = 24
 function love.update(dt)
 	debugstring = ""
 	
-	for k, v in pairs(input.controller) do
-		debugstring = debugstring .. "Controller: " .. k
-		for kk, vv in pairs(v) do
-			debugstring = debugstring .. "\n\t" .. kk .. "\t".. vv
-		end
-		debugstring = debugstring .. "\n"
-	end
-	
-	input.update()
-	
 	if not paused then
 		easer:update(dt)
 		
@@ -232,28 +169,9 @@ function love.update(dt)
 			easer:setPos(snaptimer,0)
 		end
 		
-		--phase = phase + 1 * dt
-		--phase = phase % 360
-		
-		rad = rad + dt * (input.controller[1].triggerright - input.controller[1].triggerleft) * 23
-		
-		local x = input.controller[1].rightx
-		local y = input.controller[1].righty
-		
-		--[[x = input.controller[1].rightx
-		y = input.controller[1].righty
-		
-		if x + y >= 0.9 then
-			local a = math.atan2(y,x)
-			
-			rot = a
-		else
-			rot = (rot + dt * 1) % (360*2)
-		end]]--
-		
-		x = input.controller[1].leftx
-		y = input.controller[1].lefty
-		
+		local x = input:getAxis(1,"leftx")
+		local y = input:getAxis(1,"lefty")
+
 		if x+y ~= 0 then
 			local a = math.atan2(y,x)
 			
@@ -272,7 +190,7 @@ function love.update(dt)
 			else
 				ars = idle%10
 			end
-			debugstring = debugstring .. "\nARS: " .. ars .. "\n"
+			debugstring = debugstring .. "ARS: " .. ars .. "\n\n"
 			hue = (hue + dt * ars * dir) % 360
 			idle = idle + dt
 		end
@@ -309,19 +227,20 @@ function love.update(dt)
 		mode7:send("phase",math.rad(easer:get(phase)))
 	end
 	
-	debugstring = debugstring .. "\nTo Shader:"
+	debugstring = debugstring .. "To Shader:"
 				.."\n\toriginX:" .. rightstick.x
 				.. "\n\toriginY:" .. rightstick.y
 				.. "\n\trotation:" .. easer:get(rot)
 				.. "\n\tradius:" .. rad
 				.. "\n\tscale:" .. easer:get(scale)
 				.. "\n\tphase:" .. easer:get(phase)
+				.. "\n\n"
 end
 
 function love.draw()
 
 	local c = {tlz.HSL2RGB((easer:get(hue2)) % 360,1,0.5)}
-	debugstring = debugstring .. "\nc:" .. c[1] .. "\t" .. c[2] .. "\t" .. c[3]
+	--debugstring = debugstring .. "c:" .. c[1] .. "\t" .. c[2] .. "\t" .. c[3]
 	
 	love.graphics.setCanvas(canvas)
 		--love.graphics.setColor(255,255,255)
@@ -341,10 +260,10 @@ function love.draw()
 		else
 			love.graphics.setColor(0,0,0)
 		end
-		--for i=0,6 do
-			g = math.rad(easer:get(rot))
-			love.graphics.line(rad*math.cos(g) + rightstick.x,rad*math.sin(g) + rightstick.y,2000*math.cos(g) + rightstick.x,2000*math.sin(g) + rightstick.y)
-		--end
+
+		g = math.rad(easer:get(rot))
+		love.graphics.line(rad*math.cos(g) + rightstick.x,rad*math.sin(g) + rightstick.y,2000*math.cos(g) + rightstick.x,2000*math.sin(g) + rightstick.y)
+
 	love.graphics.setCanvas(buffer)
 		love.graphics.clear()
 
@@ -361,16 +280,15 @@ function love.draw()
 		love.graphics.scale(love.graphics.getWidth()/1920,love.graphics.getHeight()/1080)
 		love.graphics.draw(buffer)
 		love.graphics.pop()
-		
 
-	debugstring = debugstring .. "\n" .. "W: " .. love.graphics.getWidth() .. "\tH: " .. love.graphics.getHeight()
+	debugstring = debugstring .. "W: " .. love.graphics.getWidth() .. "\tH: " .. love.graphics.getHeight()
 	if debug then
 		love.graphics.setColor(255,255,255,255*0.7)
-		love.graphics.rectangle("fill",0,0,200*3,1080)
+		love.graphics.rectangle("fill",0,0,220*3,1080)
 		love.graphics.setColor(0,0,0)
-		love.graphics.print(debugstring,200 * 0,0)
-		love.graphics.print(easer:debugString(),200 * 1,0)
-		love.graphics.print(input1:debugString(),200 * 2,0)
+		love.graphics.print(debugstring,220 * 0,0)
+		love.graphics.print(easer:debugString(),220 * 1,0)
+		love.graphics.print(input:debugString(),220 * 2,0)
 		love.graphics.setColor(255,255,255)
 	end
 end
