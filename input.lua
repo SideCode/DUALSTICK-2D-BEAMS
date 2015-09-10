@@ -1,7 +1,7 @@
 local tlz = require("tlz")
 
 local input = {}
-input.player = {}
+input.players = {}
 input.index = 1
 input.capacity = 2
 input.size = 0
@@ -15,11 +15,11 @@ function input.joystickadded(self,joystick)
 	if(joystick:isGamepad())then
 		if(self.size ~= self.capacity)then			--A+
 			local index = self.index
-			while(self.player[index] ~= nil)do
+			while(self.players[index] ~= nil)do
 				index = index + 1
 			end
 			
-			self.player[index] = self._gamepad:newplayer(index,joystick)
+			self.players[index] = self._gamepad:newplayer(index,joystick)
 			
 			self.size = self.size + 1
 			self.index = index + 1
@@ -28,16 +28,14 @@ function input.joystickadded(self,joystick)
 end
 
 function input.joystickremoved(self,joystick)
-	local player = self.player
-	local id = joystick:getID()
-	local _gamepad = self._gamepad
-	local index = _gamepad.player[id]
+	local players = self.players
+	local index = self._gamepad.mapToPlayers[joystick:getID()]
 	
-	if(player[index] ~= nil)then
-		tlz.clearTable(player[index].args)
-		tlz.clearTable(player[index])
-		_gamepad.player[id] = nil
-		player[index] = nil
+	if(players[index] ~= nil)then
+		tlz.clearTable(players[index].args)
+		tlz.clearTable(players[index])
+		self._gamepad.mapToPlayers[joystick:getID()] = nil
+		players[index] = nil
 		
 		if(index < self.index)then
 			self.index = index
@@ -48,24 +46,24 @@ function input.joystickremoved(self,joystick)
 end
 
 function input.isDown(self,player,button)
-	local player = self.player[player]
+	local player = self.players[player]
 	return player ~= nil and player.controller.isDown(player.args,button) or false
 end
 
 function input.getAxis(self,player,axis,flags)
-	local player = self.player[player]
+	local player = self.players[player]
 	return player ~= nil and player.controller.getAxis(player.args,axis,flags) or 0
 end
 
 function input.gamepadpressed(self,joystick,button)
-	self.pressed(self._gamepad.player[joystick:getID()],button)
+	self.pressed(self._gamepad.mapToPlayers[joystick:getID()],button)
 end
 function input.gamepadreleased(self,joystick,button)
-	self.released(self._gamepad.player[joystick:getID()],button)
+	self.released(self._gamepad.mapToPlayers[joystick:getID()],button)
 end
 
 input._gamepad = {
-	player = {},
+	mapToPlayers = {},
 	name = "Gamepad",
 	defaultConfig = {
 		deadzones = {
@@ -89,7 +87,7 @@ function input._gamepad.newplayer(self,index,joystick,config)
 		}
 	}
 	
-	self.player[joystick:getID()] = index
+	self.mapToPlayers[joystick:getID()] = index
 	
 	return player
 end
@@ -135,12 +133,12 @@ function input.debugString(self)
 		s = s .. " nil"
 	end
 
-	for k, v in pairs(self.player) do
+	for k, v in pairs(self.players) do
 		s = s .. "\nPlayer#" .. k
 			.. "\n controller: " .. v.controller.name
 	end
 	
-	for k, v in pairs(self._gamepad.player) do
+	for k, v in pairs(self._gamepad.mapToPlayers) do
 		local leftx = self:getAxis(v,"leftx")
 		local leftx_raw = self:getAxis(v,"leftx",{raw = true})
 		local lefty = self:getAxis(v,"lefty")
