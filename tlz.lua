@@ -25,7 +25,7 @@ function tlz.HSL2RGB(hue,sat,lum)
 	local g = {x,c,c,x,m,m}
 	local b = {m,m,x,c,c,x}
 
-	return r[h],g[h],b[h]
+	return {r[h],g[h],b[h]}
 end
 
 function tlz.flipDir(dir,xf,yf)

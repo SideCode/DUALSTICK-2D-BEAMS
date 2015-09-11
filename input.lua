@@ -50,9 +50,12 @@ function input.isDown(self,player,button)
 	return player ~= nil and player.controller.isDown(player.args,button) or false
 end
 
-function input.getAxis(self,player,axis,flags)
+function input.getAxes(self,player,axes,flags)
 	local player = self.players[player]
-	return player ~= nil and player.controller.getAxis(player.args,axis,flags) or 0
+	if(player == nil)then
+		return 0,0
+	end
+	return player.controller.getAxes(player.args,axes,flags)
 end
 
 function input.gamepadpressed(self,joystick,button)
@@ -67,10 +70,8 @@ input._gamepad = {
 	name = "Gamepad",
 	defaultConfig = {
 		deadzones = {
-			leftx = 0.2,
-			lefty = 0.2,
-			rightx = 0.2,
-			righty = 0.2
+			left = 0.2,
+			right = 0.2
 		}
 	}
 }
@@ -95,24 +96,24 @@ end
 function input._gamepad.isDown(args,button)
 	return args.joystick:isGamepadDown(button)
 end
-function input._gamepad.getAxis(args,axis,flags)
+function input._gamepad.getAxes(args,axes,flags)
 	local raw = false
 	
 	if(flags ~= nil)then
 		raw = flags.raw or raw
 	end
 	
-	if(raw)then
-		return args.joystick:getGamepadAxis(axis)
-	end
+	local xString = axes.."x"
+	local yString = axes.."y"
 	
-	local v = args.joystick:getGamepadAxis(axis)
-		
-	if(math.abs(v) > args.deadzones[axis])then
-		return args.joystick:getGamepadAxis(axis)
+	local x = args.joystick:getGamepadAxis(xString)
+	local y = args.joystick:getGamepadAxis(yString)
+	
+	if(raw or math.abs(x) > args.deadzones[axes] or math.abs(y) > args.deadzones[axes])then
+		return x,y
 	end
 		
-	return 0
+	return 0,0
 end
 
 function input.pressed(player,button)end
@@ -139,15 +140,11 @@ function input.debugString(self)
 	end
 	
 	for k, v in pairs(self._gamepad.mapToPlayers) do
-		local leftx = self:getAxis(v,"leftx")
-		local leftx_raw = self:getAxis(v,"leftx",{raw = true})
-		local lefty = self:getAxis(v,"lefty")
-		local lefty_raw = self:getAxis(v,"lefty",{raw = true})
+		local leftx, lefty = self:getAxes(v,"left")
+		local leftx_raw, lefty_raw = self:getAxes(v,"left",{raw = true})
 		
-		local rightx = self:getAxis(v,"rightx")
-		local rightx_raw = self:getAxis(v,"rightx",{raw = true})
-		local righty = self:getAxis(v,"righty")
-		local righty_raw = self:getAxis(v,"righty",{raw = true})
+		local rightx, righty = self:getAxes(v,"right")
+		local rightx_raw, righty_raw = self:getAxes(v,"right",{raw = true})
 		
 		s = s .. "\nGamepad#" .. k
 			.. "\n player: " .. v
