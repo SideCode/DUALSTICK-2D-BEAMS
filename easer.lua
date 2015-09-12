@@ -12,10 +12,12 @@ function easer.new(self,v0,v1,time,flags)
 	local speed = 1
 	local loop = nil
 	local method = "linear"
+	local paused = false
 	if(flags)then
 		speed = flags.speed or speed
 		loop = flags.loop or loop
 		method = flags.method or method
+		paused = flags.paused or paused
 	end
 	
 	local index = self.index
@@ -35,6 +37,7 @@ function easer.new(self,v0,v1,time,flags)
 	i.v1 = v1
 	i.speed = speed
 	i.loop = loop
+	i.paused = paused
 	i._dir = 1
 	
 	self.size = self.size + 1
@@ -46,21 +49,32 @@ function easer.new(self,v0,v1,time,flags)
 end
 
 function easer.update(self,dt)
-	for _,v in pairs(self.instance) do
-		v.t = v.t + dt * v.speed * v._dir
-		if(v.loop == "linear")then
-			v.t = v.t % v.time
-		elseif(v.loop == "alternate")then
-			if(v.t > v.time)then
-				v.t = v.time - (v.t - v.time)
-				v._dir = -v._dir
-			elseif(v.t < 0) then
-				v.t = -v.t
-				v._dir = -v._dir
-			end
-		else
-			v.t = math.min(math.max(v.t,0),v.time)
+	for k,v in pairs(self.instance) do
+		self:continue(k,dt,true)
+	end
+end
+
+function easer.pause(self,index,paused)
+	self.instance[index].paused = paused
+end
+
+function easer.continue(self,index,dt,notforced)
+	local v = self.instance[index]
+	local p = (not v.paused or not notforced) and 1 or 0 
+	
+	v.t = v.t + dt * v.speed * v._dir * p
+	if(v.loop == "linear")then
+		v.t = v.t % v.time
+	elseif(v.loop == "alternate")then
+		if(v.t > v.time)then
+			v.t = v.time - (v.t - v.time)
+			v._dir = -v._dir
+		elseif(v.t < 0) then
+			v.t = -v.t
+			v._dir = -v._dir
 		end
+	else
+		v.t = math.min(math.max(v.t,0),v.time)
 	end
 end
 	
