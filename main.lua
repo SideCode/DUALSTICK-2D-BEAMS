@@ -48,8 +48,13 @@ function love.load()
 			number x2 = x1 * cos(-rotation) - y1 * sin(-rotation);
 			number y2 = x1 * sin(-rotation) + y1 * cos(-rotation);
 			
-			number m = y2 / 2000;//1 / y2 + 1/x2;
+			number m = y2 / 2000;
+			
 			number s = max(scale,1);
+			
+			y2 += s * m * sin(x2*m + phase*360);
+			
+			m = 1 / y2 + 1/x2;
 			
 			y2 += s * m * sin(x2*m + phase*360);
 			
@@ -164,18 +169,9 @@ function love.update(dt)
 
 	easer:update(dt)
 	theColor = tlz.HSL2RGB(easer:get(theHue),1,0.5)
-
-	--hero.xVel = 0
-	--hero.yVel = 0
 	
 	hero.shootingLeft = input:getButton(1,"leftshoulder")
 	hero.shootingRight = input:getButton(1,"rightshoulder")
-	
-	--[[local xMov = (hero.shootingLeft and 0 or input:getAxis(1,"leftx",{raw = true}))
-				+ (hero.shootingRight and 0 or input:getAxis(1,"rightx",{raw = true}))
-	local yMov = (hero.shootingLeft and 0 or input:getAxis(1,"lefty",{raw = true}))
-				+ (hero.shootingRight and 0 or input:getAxis(1,"righty",{raw = true}))
-	if(math.abs(xMov)+math.abs(yMov) > 0.4)then]]--
 	
 	local xMov,yMov = input:getStick(1,"left")
 	
@@ -212,20 +208,6 @@ function love.update(dt)
 			beamD = x
 			bad.hit = true
 		end
-		--[[
-		local x1 = bad.x - hero.x
-		local y1 = bad.y - hero.y
-		
-		local rotation = hero.rightbeam.dir
-		local x2 = x1 * math.cos(-rotation) - y1 * math.sin(-rotation)
-		local y2 = x1 * math.sin(-rotation) + y1 * math.cos(-rotation)
-		
-		if(math.abs(y2) < bad.radius and x2 > 0)then
-			dir2Hero = dir2Hero + math.rad(180)-- + math.rad(10)*
-			amp = (1-y2/bad.radius)*1.1 - 0.5
-			beamD = x2
-			bad.hit = true
-		end]]--
 	end
 	bad.x = bad.x + math.cos(dir2Hero) * 200 * dt * amp
 	bad.y = bad.y + math.sin(dir2Hero) * 200 * dt * amp
@@ -236,13 +218,6 @@ function love.update(dt)
 		bad.x = bad.x + math.cos(d) * r
 		bad.y = bad.y + math.sin(d) * r
 	end
-	
-	--[[local r = (hero.radius + bad.radius) - (x * x + y * y)^0.5
-	if(r > 0)then
-		dir2Hero = math.atan2(hero.y - bad.y,hero.x - bad.x)
-		bad.x = bad.x - math.cos(dir2Hero) * r
-		bad.y = bad.y - math.sin(dir2Hero) * r
-	end]]--
 	
 	mode7:send("phase",math.rad(easer:get(phase)))
 	mode7:send("originX",hero.x)--hero.shootingRight and hero.x or SCREEN_WIDTH/2)
@@ -255,27 +230,10 @@ bgrot = easer:new(0,360,23,{loop = "linear"})
 function love.draw()
 	love.graphics.setCanvas(buffer)
 	love.graphics.setColor(255,255,255)
-	--love.graphics.clear()
-	
-	--[[for _,v in pairs(hero.rightbeam.parts) do
-		love.graphics.setColor(v.color)
-		love.graphics.circle("fill",v.x,v.y,v.radius,v.radius^2)
-	end]]--
-	
+
 	love.graphics.setBlendMode("replace")
 	love.graphics.setColor({0,0,0,0})
 	if(hero.shootingRight)then
-		--[[for i=-beamR, beamR,beamR/7 do
-			--love.graphics.setColor({theColor[1],theColor[2],theColor[3],easer:rescale((math.abs(i)/beamR),"inCubic")*255})
-			--love.graphics.setColor(1,1,1,(1-easer:rescale(math.abs(i)/beamR,"inCubic"))*255)
-			local x = i*math.cos(hero.rightbeam.dir+math.rad(90))
-			local y = i*math.sin(hero.rightbeam.dir+math.rad(90))
-			local dir = math.tan(i/hero.radius)
-			love.graphics.line( hero.x + math.cos(hero.rightbeam.dir+dir)*hero.radius,
-								hero.y + math.sin(hero.rightbeam.dir+dir)*hero.radius,
-								hero.x + math.cos(hero.rightbeam.dir)*5000+x,
-								hero.y + math.sin(hero.rightbeam.dir)*5000+y)
-		end]]--
 		love.graphics.line(hero.x,hero.y,hero.x + math.cos(hero.rightbeam.dir)*beamD,hero.y + math.sin(hero.rightbeam.dir)*beamD)
 	end
 	love.graphics.setBlendMode("alpha")
@@ -305,8 +263,7 @@ function love.draw()
 		love.graphics.setColor(theColor)
 		love.graphics.line(hero.x,hero.y,hero.x + math.cos(hero.rightbeam.dir)*beamD,hero.y + math.sin(hero.rightbeam.dir)*beamD)
 	end
-	--love.graphics.setColor(theColor)
-	--love.graphics.circle("fill",hero.x + math.cos(hero.rightbeam.dir)*beamD,hero.y + math.sin(hero.rightbeam.dir)*beamD,beamR,beamR^2)
+
 	
 	love.graphics.setCanvas(canvas)
 	love.graphics.setColor(255,255,255)
@@ -317,8 +274,6 @@ function love.draw()
 	love.graphics.setShader()	
 	
 	love.graphics.setColor(0,0,0)
-	--love.graphics.circle("fill",hero.x,hero.y,hero.radius^0.5,hero.radius)
-	--love.graphics.circle("fill",bad.x,bad.y,bad.radius^0.5,bad.radius)
 	
 	if(debugMode)then
 		love.graphics.setCanvas(canvas)
