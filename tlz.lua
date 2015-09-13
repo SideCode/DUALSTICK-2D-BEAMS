@@ -34,4 +34,29 @@ function tlz.flipDir(dir,xf,yf)
 	return math.deg(dir)
 end
 
+function tlz.c2c(x1,y1,r1,x2,y2,r2)
+	local x = x2 - x1
+	local y = y2 - y1
+	local r = r1 + r2
+	if(x*x + y*y < r^2)then
+		return r - (x*x + y*y)^0.5, math.atan2(y,x)
+	end
+	
+	return false,false
+end
+
+function tlz.l2c(x1,y1,dir,x2,y2,r2)
+	local x = x2 - x1
+	local y = y2 - y1
+	
+	local xr = x * math.cos(-dir) - y * math.sin(-dir)
+	local yr = x * math.sin(-dir) + y * math.cos(-dir)
+	
+	if(math.abs(yr) < r2 and xr > r2)then
+		return xr-r2,yr
+	end
+	
+	return false,false
+end
+
 return tlz

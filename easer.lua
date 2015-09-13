@@ -101,6 +101,7 @@ function easer.retire(self,index)
 	tlz.clearTable(self.instance[index])
 	self.instance[index] = nil
 	table.insert(self.freeIndexes,index)
+	self.size = self.size - 1
 end
 
 function easer.debugString(self)

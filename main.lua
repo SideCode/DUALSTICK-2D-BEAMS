@@ -13,7 +13,7 @@ tlz = require("tlz")
 
 function love.keypressed(key,isRepeat)
 	if(key == "`")then
-		love.window.setFullscreen(not love.window.getFullscreen)
+		love.window.setFullscreen(not love.window.getFullscreen())
 	end
 end
 
@@ -48,7 +48,7 @@ function love.load()
 			number x2 = x1 * cos(-rotation) - y1 * sin(-rotation);
 			number y2 = x1 * sin(-rotation) + y1 * cos(-rotation);
 			
-			number m = 1 / y2 + 1/x2; //y2 / 2000;
+			number m = y2 / 2000;//1 / y2 + 1/x2;
 			number s = max(scale,1);
 			
 			y2 += s * m * sin(x2*m + phase*360);
@@ -200,36 +200,49 @@ function love.update(dt)
 	
 	--this is the dumbest collision detection
 	bad.hit = false
-	local x = hero.x - bad.x
-	local y = hero.y - bad.y
 	local dir2Hero = math.atan2(hero.y - bad.y,hero.x - bad.x)
 	beamD = 5000
 	amp = 1
 	beamR = 16
 	if(hero.shootingRight)then
+		local x,y = tlz.l2c(hero.x,hero.y,hero.rightbeam.dir,bad.x,bad.y,bad.radius)
+		
+		if(x)then
+			dir2Hero = dir2Hero + math.rad(180)
+			beamD = x
+			bad.hit = true
+		end
+		--[[
 		local x1 = bad.x - hero.x
 		local y1 = bad.y - hero.y
 		
 		local rotation = hero.rightbeam.dir
-		local x2 = x1 * math.cos(-rotation) - y1 * math.sin(-rotation);
-		local y2 = x1 * math.sin(-rotation) + y1 * math.cos(-rotation);
+		local x2 = x1 * math.cos(-rotation) - y1 * math.sin(-rotation)
+		local y2 = x1 * math.sin(-rotation) + y1 * math.cos(-rotation)
 		
 		if(math.abs(y2) < bad.radius and x2 > 0)then
 			dir2Hero = dir2Hero + math.rad(180)-- + math.rad(10)*
 			amp = (1-y2/bad.radius)*1.1 - 0.5
 			beamD = x2
 			bad.hit = true
-		end
+		end]]--
 	end
 	bad.x = bad.x + math.cos(dir2Hero) * 200 * dt * amp
 	bad.y = bad.y + math.sin(dir2Hero) * 200 * dt * amp
 	
-	local r = (hero.radius + bad.radius) - (x * x + y * y)^0.5
+	local r, d = tlz.c2c(hero.x,hero.y,hero.radius,bad.x,bad.y,bad.radius)
+	
+	if(r)then
+		bad.x = bad.x + math.cos(d) * r
+		bad.y = bad.y + math.sin(d) * r
+	end
+	
+	--[[local r = (hero.radius + bad.radius) - (x * x + y * y)^0.5
 	if(r > 0)then
 		dir2Hero = math.atan2(hero.y - bad.y,hero.x - bad.x)
 		bad.x = bad.x - math.cos(dir2Hero) * r
 		bad.y = bad.y - math.sin(dir2Hero) * r
-	end
+	end]]--
 	
 	mode7:send("phase",math.rad(easer:get(phase)))
 	mode7:send("originX",hero.x)--hero.shootingRight and hero.x or SCREEN_WIDTH/2)
@@ -279,15 +292,15 @@ function love.draw()
 	love.graphics.setBackgroundColor(255,255,255,0)
 	love.graphics.clear()
 	if(hero.shootingRight)then
-		for i=-beamR, beamR,beamR/7 do
+		for i=-beamR, beamR,beamR/5 do
 			love.graphics.setColor({theColor[1],theColor[2],theColor[3],easer:rescale(math.abs(i)/beamR,"inCubic")*255})
 			local x = i*math.cos(hero.rightbeam.dir+math.rad(90))
 			local y = i*math.sin(hero.rightbeam.dir+math.rad(90))
 			local dir = math.tan(i/hero.radius)
 			love.graphics.line( hero.x + math.cos(hero.rightbeam.dir+dir)*hero.radius,
 								hero.y + math.sin(hero.rightbeam.dir+dir)*hero.radius,
-								hero.x + math.cos(hero.rightbeam.dir)*5000+x,
-								hero.y + math.sin(hero.rightbeam.dir)*5000+y)
+								hero.x + math.cos(hero.rightbeam.dir)*beamD+x,
+								hero.y + math.sin(hero.rightbeam.dir)*beamD+y)
 		end
 		love.graphics.setColor(theColor)
 		love.graphics.line(hero.x,hero.y,hero.x + math.cos(hero.rightbeam.dir)*beamD,hero.y + math.sin(hero.rightbeam.dir)*beamD)
