@@ -59,4 +59,16 @@ function tlz.l2c(x1,y1,dir,x2,y2,r2)
 	return false,false
 end
 
+function tlz.aInArc(dv,v1,v2)
+	local dv = dv % math.rad(360)
+	local v1 = v1 % math.rad(360)
+	local v2 = v2 % math.rad(360)
+	
+	if(v2 < v1)then
+		return v1 <= dv or dv <= v2
+	end
+	
+	return v1 <= dv and dv <= v2
+end
+
 return tlz

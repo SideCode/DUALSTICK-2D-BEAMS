@@ -52,12 +52,17 @@ function love.load()
 			
 			number s = max(scale,1);
 			
-			y2 += s * m * sin(x2*m + phase*360);
+			if(!(scale > 50 && x2 > 0)){
+				s = 10;
+			}
 			
+			y2 += s * m * sin(x2*m + phase*360);
+				
 			m = 1 / y2 + 1/x2;
 			
-			y2 += s * m * sin(x2*m + phase*360);
-			
+			if(x2 > -scale &&  abs(y2) < scale){	
+				y2 += s * m * sin(x2*m + phase*360);
+			}
 			x1 = x2;
 			y1 = y2;
 			
@@ -91,15 +96,20 @@ function input.pressed(player,button)
 			debugCombo = debugCombo + 1
 		elseif(button == "back")then
 			debugCombo = debugCombo + 1
-		end
-		
-		if(button == "start")then
+		elseif(button == "start")then
 			paused = not paused
+		elseif(button == "rightshoulder")then
+			local x,y = input:getStick(1,"right")
+			local newDir = math.atan2(y,x)
+			if(x~=0 or y~=0)then
+				hero.rightbeam.dir = newDir
+			end
 		end
-		
 		if(debugCombo == 2)then
 			debugMode = not debugMode
 		end
+		
+		
 	end
 end
 
@@ -165,6 +175,9 @@ bad = {
 }
 
 function love.update(dt)
+	if(paused)then
+		easer:continue(phase,dt)
+	end
 	local dt = paused and 0 or dt
 
 	easer:update(dt)
@@ -184,13 +197,29 @@ function love.update(dt)
 	
 	hero.x = hero.x + hero.xVel * dt
 	hero.y = hero.y + hero.yVel * dt
-
+	
+	local x,y = input:getStick(1,"right")
+	pointing = false
+	if(x ~= 0 or y ~= 0)then
+		pointing = true
+		easer:setPos(bgrot,(math.deg(math.atan2(y,x))%360)/360)
+	end
 	if(hero.shootingRight)then
-		local x,y = input:getStick(1,"right")
-		local newDir = math.atan2(y,x)
-		
-		if(x ~= 0 or y ~= 0)then
-			hero.rightbeam.dir = newDir
+		local dir = math.atan2(y,x)
+		if(pointing)then
+			if(tlz.aInArc(dir,hero.rightbeam.dir,hero.rightbeam.dir+math.rad(180)))then
+				if(tlz.aInArc(dir,hero.rightbeam.dir,hero.rightbeam.dir + dt/3))then
+					hero.rightbeam.dir = dir
+				else
+					hero.rightbeam.dir = hero.rightbeam.dir + dt/3
+				end
+			else
+				if(tlz.aInArc(dir,hero.rightbeam.dir - dt/3,hero.rightbeam.dir))then
+					hero.rightbeam.dir = dir
+				else
+					hero.rightbeam.dir = hero.rightbeam.dir - dt/3
+				end
+			end
 		end
 	end
 	
@@ -200,19 +229,23 @@ function love.update(dt)
 	beamD = 5000
 	amp = 1
 	beamR = 16
-	if(hero.shootingRight)then
-		local x,y = tlz.l2c(hero.x,hero.y,hero.rightbeam.dir,bad.x,bad.y,bad.radius)
-		
-		if(x)then
-			dir2Hero = dir2Hero + math.rad(180)
-			beamD = x
-			bad.hit = true
-		end
-	end
-	bad.x = bad.x + math.cos(dir2Hero) * 200 * dt * amp
-	bad.y = bad.y + math.sin(dir2Hero) * 200 * dt * amp
 	
-	local r, d = tlz.c2c(hero.x,hero.y,hero.radius,bad.x,bad.y,bad.radius)
+	local sx,sy = nil,nil
+	if(hero.shootingRight)then
+		sx,sy = tlz.l2c(hero.x,hero.y,hero.rightbeam.dir,bad.x,bad.y,bad.radius)
+	end
+	if(sx)then
+		dir2Hero = dir2Hero + math.rad(180)
+		beamD = sx
+		bad.hit = true
+		bad.x = hero.x + math.cos(hero.rightbeam.dir) * (beamD + bad.radius + dt * 25)
+		bad.y = hero.y + math.sin(hero.rightbeam.dir) * (beamD + bad.radius + dt * 25)
+	else
+		bad.x = bad.x + math.cos(dir2Hero) * 200 * dt * amp
+		bad.y = bad.y + math.sin(dir2Hero) * 200 * dt * amp
+	end
+	
+	local r, d = tlz.c2c(hero.x,hero.y,hero.shootingRight and 100 or hero.radius,bad.x,bad.y,bad.radius)
 	
 	if(r)then
 		bad.x = bad.x + math.cos(d) * r
@@ -225,7 +258,7 @@ function love.update(dt)
 	mode7:send("rotation",hero.shootingRight and hero.rightbeam.dir or math.rad(easer:get(bgrot)))
 	mode7:send("scale",hero.shootingRight and 100 or 10)
 end
-bgrot = easer:new(0,360,23,{loop = "linear"})
+bgrot = easer:new(0,360,60,{loop = "linear"})
 
 function love.draw()
 	love.graphics.setCanvas(buffer)
@@ -241,7 +274,7 @@ function love.draw()
 	
 	love.graphics.setColor(theColor)
 	love.graphics.circle("fill",hero.x,hero.y,hero.radius,hero.radius^2)
-	love.graphics.setColor(theColor[1]*1,theColor[2]*1,theColor[3]*1,255*0.1)
+	love.graphics.setColor(theColor[1]*1,theColor[2]*1,theColor[3]*1,255)
 	if(not bad.hit)then love.graphics.setColor(0,0,0) end
 	love.graphics.circle("fill",bad.x,bad.y,bad.radius,bad.radius^2)
 	
