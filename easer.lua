@@ -13,11 +13,13 @@ function easer.new(self,v0,v1,time,flags)
 	local loop = nil
 	local method = "linear"
 	local paused = false
+	local pos = 0
 	if(flags)then
 		speed = flags.speed or speed
 		loop = flags.loop or loop
 		method = flags.method or method
 		paused = flags.paused or paused
+		pos = flags.pos or pos
 	end
 	
 	local index = self.index
@@ -28,24 +30,54 @@ function easer.new(self,v0,v1,time,flags)
 		self.index = index
 	end
 	
-	self.instance[index] = {}
-	local i = self.instance[index]
-	i.method = method
-	i.time = time
-	i.t = 0
-	i.v0 = v0
-	i.v1 = v1
-	i.speed = speed
-	i.loop = loop
-	i.paused = paused
-	i._dir = 1
-	
+	local newInstance = {}
+	self._set(
+		newInstance,
+		{
+			method=method,
+			time=time,
+			t=0,
+			v0=v0,
+			v1=v1,
+			speed=speed,
+			loop=loop,
+			paused=paused,
+			_dir=1,
+			pos=pos
+		}
+	)
+
+	self.instance[index] = newInstance
+
 	self.size = self.size + 1
 	if self.size > self.capacity then
 		self.capacity = self.capacity * 2
 	end
 	
 	return index
+end
+
+function easer._set(instance,flags)
+	local i = instance
+	
+	i.v0 = flags.v0 or i.v0
+	i.v1 = flags.v1 or i.v1
+	i.time = flags.time or i.time
+	i.speed = flags.speed or i.speed
+	i.loop = flags.loop or i.loop
+	i.method = flags.method or i.method
+	i.paused = flags.paused or i.paused
+	
+	i.method = flags.method or i.method
+	i.time = flags.time or i.time
+	i.v0 = flags.v0 or i.v0
+	i.v1 = flags.v1 or i.v1
+	i.speed = flags.speed or i.speed
+	i.loop = flags.loop or i.loop
+	i.paused = flags.paused or i.paused
+	i._dir = flags._dir or i._dir
+	
+	i.t = flags.pos ~= nil and i.time * flags.pos or i.t
 end
 
 function easer.update(self,dt)
@@ -93,9 +125,22 @@ function easer.setPos(self,index,pos)
 	local i = self.instance[index]
 	
 	i.t = i.time * pos
-	
-	return self:get(index)
 end
+
+function easer.reset(self,index,flags)
+	local i = self.instance[index]
+	local _flags = flags or {pos = 0}
+	
+	easer._set(
+		i,
+		{
+			time = _flags.time,
+			pos = _flags.pos
+		}
+	)
+end
+
+
 
 function easer.retire(self,index)
 	tlz.clearTable(self.instance[index])
