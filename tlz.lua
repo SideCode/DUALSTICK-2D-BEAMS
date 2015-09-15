@@ -6,7 +6,7 @@ function tlz.clearTable(table)
 	end
 end
 
-function tlz.HSL2RGB(hue,sat,lum)
+function tlz.HSL2RGB(hue,sat,lum,a)
 	local c = (1 - math.abs(2 * lum - 1)) * sat
 	local h = hue/60
 	local x = c * (1 - math.abs(h % 2 - 1))
@@ -25,7 +25,7 @@ function tlz.HSL2RGB(hue,sat,lum)
 	local g = {x,c,c,x,m,m}
 	local b = {m,m,x,c,c,x}
 
-	return {r[h],g[h],b[h]}
+	return {r[h],g[h],b[h],a and a*255 or 255}
 end
 
 function tlz.flipDir(dir,xf,yf)
