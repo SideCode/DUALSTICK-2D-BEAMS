@@ -52,7 +52,7 @@ function tlz.l2c(x1,y1,dir,x2,y2,r2)
 	local xr = x * math.cos(-dir) - y * math.sin(-dir)
 	local yr = x * math.sin(-dir) + y * math.cos(-dir)
 	
-	if(math.abs(yr) < r2 and xr > r2)then
+	if(math.abs(yr) <= r2 and xr >= -r2)then
 		return xr-r2,yr
 	end
 	
@@ -69,6 +69,29 @@ function tlz.aInArc(dv,v1,v2)
 	end
 	
 	return v1 <= dv and dv <= v2
+end
+
+function tlz.bound(dx,dy,x1,x2,y1,y2)
+	local bx = 0
+	local by = 0
+	
+	if(dx < x1)then
+		dx = x1
+		bx = -1
+	elseif(dx > x2)then
+		dx = x2
+		bx = 1
+	end
+	
+	if(dy < y1)then
+		dy = y1
+		by = -1
+	elseif(dy > y2)then
+		dy = y2
+		by = 1
+	end
+	
+	return dx,dy,bx,by
 end
 
 return tlz
