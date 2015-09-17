@@ -171,16 +171,18 @@ function input.released(player,button)
 	if(player == 1)then
 		if(not paused)then
 			if(button == "rightshoulder")then
-				love.graphics.setCanvas(buffer.bg)
-				love.graphics.setColor(255,255,255)
-				love.graphics.setBlendMode("replace")
-				love.graphics.setShader(mode7)
-					love.graphics.draw(buffer.bg)
-				love.graphics.setShader()
-				love.graphics.setBlendMode("alpha")
-				love.graphics.setCanvas(canvas)
-				
-				grabbedBad = nil
+				if(not hero.mustReleaseRightShoulder)then
+					love.graphics.setCanvas(buffer.bg)
+					love.graphics.setColor(255,255,255)
+					love.graphics.setBlendMode("replace")
+					love.graphics.setShader(mode7)
+						love.graphics.draw(buffer.bg)
+					love.graphics.setShader()
+					love.graphics.setBlendMode("alpha")
+					love.graphics.setCanvas(canvas)
+					
+					grabbedBad = nil
+				end
 				hero.mustReleaseRightShoulder = false
 			end
 		elseif(button == "rightshoulder")then
@@ -217,16 +219,10 @@ hero = {
 easer:setPos(hero.leftbeam.cooldown,1)
 easer:setPos(hero.rightbeam.cooldown,1)
 
-theHue = easer:new(0,360,23,{loop = "linear", paused = true})
+theHue = easer:new(0,360,60*2.5,{loop = "linear", paused = true})
 theColor = {0,0,0}
 phase = easer:new(0,360,360,{loop = "linear"})
 
---[[bad = {
-	radius = 32,
-	x = 0,
-	y = 0,
-	hue = 0
-}]]--
 local badList = {}
 function newBad(x,y,radius,hue)
 	table.insert(badList,{
@@ -338,8 +334,8 @@ function love.update(dt)
 				if(easer:get(bad.stunned) > 0)then
 					bad.dir = bad.dir - d
 				end
-				bad.x = bad.x + math.cos(d) * r
-				bad.y = bad.y + math.sin(d) * r
+				hero.x = hero.x - math.cos(d) * r
+				hero.y = hero.y - math.sin(d) * r
 			end
 			
 			local bx,by
@@ -349,27 +345,33 @@ function love.update(dt)
 			)
 			
 			--even shittier collision detection
-			for k,bad2 in pairs(badList) do
-				local r, d = tlz.c2c(bad.x,bad.y,bad.radius,bad2.x,bad2.y,bad2.radius)
-				if(r)then
-					if(easer:get(bad.stunned) > 0 and easer:get(bad2.stunned) > 0)then
-						r = r/2
-						bad2.x = bad2.x + math.cos(d) * r
-						bad2.y = bad2.y + math.sin(d) * r
-						bad.x = bad.x - math.cos(d) * r
-						bad.y = bad.y - math.sin(d) * r
-					elseif(easer:get(bad.stunned) > 0)then
-						bad2.x = bad2.x + math.cos(d) * r
-						bad2.y = bad2.y + math.sin(d) * r
-					elseif(easer:get(bad2.stunned) > 0)then
-						bad.x = bad.x - math.cos(d) * r
-						bad.y = bad.y - math.sin(d) * r
-					else
-						r = r/2
-						bad2.x = bad2.x + math.cos(d) * r
-						bad2.y = bad2.y + math.sin(d) * r
-						bad.x = bad.x - math.cos(d) * r
-						bad.y = bad.y - math.sin(d) * r
+			for k2,bad2 in pairs(badList) do
+				if(k ~= k2)then
+					local r, d = tlz.c2c(bad.x,bad.y,bad.radius,bad2.x,bad2.y,bad2.radius)
+					if(r)then
+						if(easer:get(bad.stunned) > 0 and easer:get(bad2.stunned) > 0)then
+							r = r/2
+							bad2.x = bad2.x + math.cos(d) * r
+							bad2.y = bad2.y + math.sin(d) * r
+							bad.x = bad.x - math.cos(d) * r
+							bad.y = bad.y - math.sin(d) * r
+							--easer:pause(bad.stunned,true)
+							--easer:pause(bad2.stunned,true)
+							--bad.speed = 0
+							--bad2.speed = 0
+						elseif(easer:get(bad.stunned) > 0)then
+							bad2.x = bad2.x + math.cos(d) * r
+							bad2.y = bad2.y + math.sin(d) * r
+						elseif(easer:get(bad2.stunned) > 0)then
+							bad.x = bad.x - math.cos(d) * r
+							bad.y = bad.y - math.sin(d) * r
+						else
+							r = r/2
+							bad2.x = bad2.x + math.cos(d) * r
+							bad2.y = bad2.y + math.sin(d) * r
+							bad.x = bad.x - math.cos(d) * r
+							bad.y = bad.y - math.sin(d) * r
+						end
 					end
 				end
 			end
@@ -391,6 +393,9 @@ function love.update(dt)
 		
 		if(grabbedBad == nil)then
 			grabbedBad = closestHitBad
+			if(closestHitBad ~= nil)then
+				frame = 0
+			end
 		end
 		
 		beamD = 5000
@@ -399,16 +404,22 @@ function love.update(dt)
 			bad.flung = false
 			bad.speed = 0
 			bad.bounceCount = 0
+			print(frame)
+			frame = frame + 1
 			easer:reset(bad.stunned,{time = 0.1, pos = 1})
-			local sx,sy = tlz.l2c(hero.x,hero.y,hero.rightbeam.dir,bad.x,bad.y,bad.radius)
-			beamD = sx + dt * 25
+			--hero.rightbeam.dir = math.atan2(bad.y - hero.y,bad.x - hero.x)
+			local sx = ((hero.x - bad.x) ^ 2 + (hero.y - bad.y)^2) ^ 0.5
+			--local sx,sy = tlz.l2c(hero.x,hero.y,hero.rightbeam.dir,bad.x,bad.y,bad.radius)
+			beamD = sx - bad.radius + dt * 25
 			bad.x = hero.x + math.cos(hero.rightbeam.dir) * (beamD + bad.radius)
 			bad.y = hero.y + math.sin(hero.rightbeam.dir) * (beamD + bad.radius)
 			
-			tlz.bound(bad.x,bad.y,
+			bad.x,bad.y = tlz.bound(bad.x,bad.y,
 				0 + bad.radius, RENDER_WIDTH - bad.radius,
 				0 + bad.radius, RENDER_HEIGHT - bad.radius
 			)
+			
+			hero.rightbeam.dir = math.atan2(bad.y - hero.y,bad.x - hero.x)
 		end
 		
 		hero.x, hero.y = tlz.bound(hero.x,hero.y,
@@ -416,6 +427,15 @@ function love.update(dt)
 			0 + hero.radius, RENDER_HEIGHT - hero.radius
 		)
 		
+		-- this is like the worst system ever.
+		for k,bad in pairs(badList) do	
+			local r, d = tlz.c2c(hero.x,hero.y,hero.radius,bad.x,bad.y,bad.radius)
+				
+			if(r)then
+				bad.x = bad.x + math.cos(d) * r
+				bad.y = bad.y + math.sin(d) * r
+			end
+		end
 	end
 	
 	
@@ -444,7 +464,7 @@ function love.draw()
 	love.graphics.circle("fill",hero.x,hero.y,hero.radius,hero.radius^2)
 	
 	for k,bad in pairs(badList) do
-		love.graphics.setColor(tlz.HSL2RGB((bad.hue+easer:get(phase))%360,1,0.5))
+		love.graphics.setColor(tlz.HSL2RGB((bad.hue+easer:get(theHue))%360,1,0.5))
 		love.graphics.circle("fill",bad.x,bad.y,bad.radius,bad.radius^2)
 	end
 	
@@ -484,7 +504,7 @@ function love.draw()
 	
 	for k,bad in pairs(badList) do
 	--if(easer:get(badStunned) < 1)then
-		local rad = easer:get(bad.stunned)*(bad.radius - 3)
+		local rad = easer:get(bad.stunned)*(bad.radius - 9)
 		love.graphics.setColor(255,255,255)
 		love.graphics.circle("fill",bad.x,bad.y,rad,rad^2)
 		--love.graphics.setColor(tlz.HSL2RGB(0,1,0.5,0.5))

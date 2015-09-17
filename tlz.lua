@@ -53,7 +53,7 @@ function tlz.l2c(x1,y1,dir,x2,y2,r2)
 	local yr = x * math.sin(-dir) + y * math.cos(-dir)
 	
 	if(math.abs(yr) <= r2 and xr >= -r2)then
-		return xr-r2,yr
+		return xr,yr
 	end
 	
 	return false,false
