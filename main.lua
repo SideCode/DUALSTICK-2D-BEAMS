@@ -102,6 +102,8 @@ function love.load()
 				//texcolor.a = 1 - texcolor.a;
 			}
 			
+			
+			
 			if(x2*x2 + y2*y2 < radius * radius){
 				if(texcolor.a == 1){
 					texcolor.rgba = vec4(1);
@@ -109,6 +111,8 @@ function love.load()
 					texcolor.a = 1;
 				}
 			}
+			
+			//texcolor.a = texcolor.a * 0.9;
 			
 			return texcolor * color;
         }
@@ -537,5 +541,4 @@ function love.draw()
 		love.graphics.print("\nx: "..love.mouse.getX().."y: "..love.mouse.getY(),c*2,0)
 		love.graphics.print("\n\ntheHue: "..easer:get(theHue),c*2,0)
 	end
-
 end
