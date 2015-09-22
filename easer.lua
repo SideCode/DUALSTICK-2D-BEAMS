@@ -140,9 +140,7 @@ function easer.reset(self,index,flags)
 	)
 end
 
-
-
-function easer.retire(self,index)
+function easer.remove(self,index)
 	tlz.clearTable(self.instance[index])
 	self.instance[index] = nil
 	table.insert(self.freeIndexes,index)
