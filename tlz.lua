@@ -1,8 +1,8 @@
 local tlz = {}
 
-function tlz.clearTable(table)
-	for key in pairs(table) do
-		table[key] = nil
+function tlz.clearTable(t)
+	for k in pairs(t) do
+		t[k] = nil
 	end
 end
 
