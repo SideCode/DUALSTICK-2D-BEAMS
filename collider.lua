@@ -83,11 +83,56 @@ function collider.setJointDir(self,key,dir)
 	joint.dir.y = math.sin(deg)
 end
 
-function collider.j2c(self,jointKey,circleKey)
-
+function collider.c2c(c1,c2)
+	local dX = c2.x - c1.x
+	local dY = c2.y - c1.y
+	local m = dX * dX + dY * dY
+	local r = c1.r + c2.r
+	
+	if m < r * r then
+		m = math.sqrt(m)
+		return r - m, dX/m, dY/m
+	end
+	
+	return false
 end
 
-function collider.j2j(self,joint1Key,joint2Key)
+function collider.j2c(joint,circle)
+	local cx = circle.x - joint.originC.x
+	local cy = circle.y - joint.originC.y
+	
+	local cxr = cx * joint.dir.x - cy * joint.dir.y
+	local cyr = cx * joint.dir.y + cy * joint.dir.x
+	
+	local jl = joint.length
+	if cxr - circle.r < jl + joint.endC.r and cxr + circle.r > jl - joint.originC.r then
+		local jxp = math.min(jl,cxr)
+		local jrp = jxp / jl * (joint.endC.r - joint.originC.r) + joint.originC.r
+		
+		if math.abs(cyr) < jrp then
+			local dl, dxr, dyr = collider.c2c({
+				x = jxp,
+				y = 0,
+				r = jrp
+			},{
+				x = cxr
+				y = cyr
+				r = circle.r
+			})
+			
+			if dl then
+				local dx = dxr * joint.dir.x + dyr * joint.dir.y
+				local dy = -dxr * joint.dir.y + dyr * joint.dir.x
+				
+				return dl, dx, dy
+			end
+		end
+	end
+	
+	return false
+end
+
+function collider.j2j(joint1Key,joint2Key)
 
 end
 
