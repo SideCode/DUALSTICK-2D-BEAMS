@@ -570,8 +570,7 @@ function getDirBit(x1,y1,x2,y2)
 end
 
 sliceTable = {mt = {}}
-setmetatable(sliceTable,{
-	__call = function(t)
+function sliceTable.__call (t)
 		local t = t
 		if type(t) == "string" then
 			t = {}

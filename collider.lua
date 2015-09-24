@@ -11,14 +11,15 @@ local collider = {
 
 function collider.newCircle(self,x,y,r)
 	local circle = {x=x,y=y,r=r}
-	
+	circle.jointsToEndsKeys = {}
+	circle.jointstoOriginsKeys = {}
 	return self.freeCircles:push(circle)
 end
 
 function collider.removeCircle(self,key)
 	local circle = self.freeCircles:remove(key)
-
-	clear(circle)
+	
+	--clear(circle)
 end
 
 --[[Joints
@@ -28,10 +29,7 @@ end
 	dir			angle from origin to end relative to screen coordinate plane.
 ]]--
 function collider.newJoint(originKey,endKey)
-	local joint = {
-		originKey = originKey
-		endKey = endKey
-	}
+	local joint = {}
 	local originC = self.freeCircles:remove(originkey)
 	local endC = self.freeCircles:remove(endkey)
 	
@@ -47,10 +45,13 @@ function collider.newJoint(originKey,endKey)
 		deg = math.deg(math.atan2(y,x))
 	}
 	
+	joint.originC = originC
+	joint.endC = endC
+	
 	local jointKey = self.joints:push(joint)
 	
-	originC.jointToEndKeys[jointKey] = true
-	endC.jointToOriginKeys[jointKey] = true
+	joint.originC.jointsToEndsKeys[jointKey] = true
+	joint.endC.jointsToOriginsKeys[jointKey] = true
 end
 
 function collider.removeJoint(self,key)
@@ -60,8 +61,8 @@ function collider.removeJoint(self,key)
 	local originC = freeCircles[joint.originKey]
 	local endC = freeCircles[joint.endKey]
 	
-	originC.jointToEndKeys[key] = nil
-	endC.jointToOriginKeys[key] = nil
+	originC.jointsToEndsKeys[key] = nil
+	endC.jointsToOriginsKeys[key] = nil
 	
 	self.freeCircles:push(originC)
 	self.freeCircles:push(endC)
@@ -81,3 +82,23 @@ function collider.setJointDir(self,key,dir)
 	joint.dir.x = math.cos(deg)
 	joint.dir.y = math.sin(deg)
 end
+
+function collider.j2c(self,jointKey,circleKey)
+
+end
+
+function collider.j2j(self,joint1Key,joint2Key)
+
+end
+
+function collider.areJointsJoined(self,joint1Key,joint2Key)
+	local joint1 = self.joints[joint1Key]
+	
+	local bool = joint1.originC[joint2Key] or joint1.endC[joint2Key]
+	return bool ~= nil
+end
+
+local publicCollider={
+	--public methods here
+}
+return publicCollider
