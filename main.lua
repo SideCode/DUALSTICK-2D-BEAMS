@@ -540,5 +540,29 @@ function love.draw()
 		love.graphics.print("x: "..hero.x.."y: "..hero.y,c*2,0)
 		love.graphics.print("\nx: "..love.mouse.getX().."y: "..love.mouse.getY(),c*2,0)
 		love.graphics.print("\n\ntheHue: "..easer:get(theHue),c*2,0)
+		love.graphics.print("\n\n\nmouseDirTrig: "..getDirTrig(love.graphics.getWidth()/2,love.graphics.getHeight()/2,love.mouse.getX(),love.mouse.getY()),c*2,0)
+		love.graphics.print("\n\n\n\nmouseDirBit: "..getDirBit(love.graphics.getWidth()/2,love.graphics.getHeight()/2,love.mouse.getX(),love.mouse.getY()),c*2,0)
 	end
+end
+
+function getDirTrig(x1,y1,x2,y2)
+	local dX = x2 - x1
+	local dY = y2 - y1
+	return math.deg(math.atan2(dY,dX)) % 360
+end
+
+function getDirBit(x1,y1,x2,y2)
+	local dX = x2 - x1
+	local dY = y2 - y1
+	
+	dY = -dY
+	
+	local length = math.sqrt(dX*dX+dY*dY)
+	local vX = dX / length
+	
+	local y = math.floor(dY / 2^31)
+	local x = math.floor(dX / 2^31)
+	local s = (vX + 1) * (1 + y)
+			+ (-1 - vX) * (0 - y)
+	return (s * 90 + 180) % 360
 end

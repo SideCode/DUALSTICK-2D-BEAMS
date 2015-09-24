@@ -10,16 +10,9 @@ local collider = {
 }
 
 function collider.newCircle(self,x,y,r)
-	local circle = {x,y,r,type}
+	local circle = {x=x,y=y,r=r}
 	
 	return self.freeCircles:push(circle)
-end
-
-function collider.setCircle(self,key,x,y,r)
-	local circle = self.freeCircles[key]
-	circle[1] = x or circle[1]
-	circle[2] = y or circle[2]
-	circle[3] = r or circle[3]
 end
 
 function collider.removeCircle(self,key)
@@ -28,18 +21,34 @@ function collider.removeCircle(self,key)
 	clear(circle)
 end
 
+--[[Joints
+	------
+	origin		origin circle 
+	endkey		end circle
+	dir			angle from origin to end relative to screen coordinate plane.
+]]--
 function collider.newJoint(originkey,endkey)
-	local joint = {originkey,endkey}
+	local joint = {
+		originkey = originkey
+		endkey = endkey
+	}
+	
 	self.joints:push(joint)
-	self.freeCircles:remove(originkey)
-	self.freeCircles:remove(endkey)
-end
+	
+	local originC = self.freeCircles:remove(originkey)
+	local endC = self.freeCircles:remove(endkey)
 
-function collider.setJoint(originkey,endkey)
-	local joint = self.joints[key]
-	joint[1] = originkey or joint[1]
-	joint[2] = endkey or joint[2]
-	--joint[3] = flags or joint[3]
+	local dX = endC.x - originC.x
+	local dY = endC.y - originC.y
+	local length = math.sqrt(dX*dX+dY*dY)
+	
+	joint.length = length
+	
+	joint.dir = {
+		x = dX / length,
+		y = dY / length,
+		rad = math.atan2(y,x)
+	}
 end
 
 function collider.removeJoint(self,key)
@@ -49,3 +58,16 @@ function collider.removeJoint(self,key)
 	
 	clear(joint)
 end
+
+function collider.getJointDir(self,key)
+	return self.joints[key].dir
+end
+
+function collider.setJointDir(self,key,dir)
+	local joint = self.joints[key]
+	
+	local dir = math.rad(dir)
+	
+	
+end
+
