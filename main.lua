@@ -542,6 +542,9 @@ function love.draw()
 		love.graphics.print("\n\ntheHue: "..easer:get(theHue),c*2,0)
 		love.graphics.print("\n\n\nmouseDirTrig: "..getDirTrig(love.graphics.getWidth()/2,love.graphics.getHeight()/2,love.mouse.getX(),love.mouse.getY()),c*2,0)
 		love.graphics.print("\n\n\n\nmouseDirBit: "..getDirBit(love.graphics.getWidth()/2,love.graphics.getHeight()/2,love.mouse.getX(),love.mouse.getY()),c*2,0)
+	
+		local ostralyan = sliceTable("luke xu")
+		love.graphics.print("\n\n\n\nostralyan = "..ostralyan(1))
 	end
 end
 
@@ -561,8 +564,53 @@ function getDirBit(x1,y1,x2,y2)
 	local vX = dX / length
 	
 	local y = math.floor(dY / 2^31)
-	local x = math.floor(dX / 2^31)
 	local s = (vX + 1) * (1 + y)
 			+ (-1 - vX) * (0 - y)
 	return (s * 90 + 180) % 360
+end
+
+sliceTable = {mt = {}}
+setmetatable(sliceTable,{
+	__call = function(t)
+		local t = t
+		if type(t) == "string" then
+			t = {}
+			for i = 1,#t do
+				t[i] = t:sub(i,i)
+			end
+		end
+		setmetatable(t,sliceTable.mt)
+		return t
+	end
+})
+function sliceTable.mt.__call(self,b,e,d)
+	if e == nil and s == nil then
+		return self[b]
+	end
+	
+	local t = {}
+	local b = b or 1
+	local e = e or #self
+	local d = d or 1
+	
+	if d < 0 and b == nil and e == nil then
+		b = e
+		e = 1
+	end
+	
+	local ti = 1
+	for i=s,e,d do
+		t[ti] = self[i]
+		ti = ti + 1
+	end
+	
+	return sliceTable(t)
+end
+function sliceTable.mt.__tostring(self)
+	local s = ""
+	for _,v in ipairs(self) do
+		s = "" .. v
+	end
+	
+	return "test"
 end

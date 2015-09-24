@@ -27,17 +27,14 @@ end
 	endkey		end circle
 	dir			angle from origin to end relative to screen coordinate plane.
 ]]--
-function collider.newJoint(originkey,endkey)
+function collider.newJoint(originKey,endKey)
 	local joint = {
-		originkey = originkey
-		endkey = endkey
+		originKey = originKey
+		endKey = endKey
 	}
-	
-	self.joints:push(joint)
-	
 	local originC = self.freeCircles:remove(originkey)
 	local endC = self.freeCircles:remove(endkey)
-
+	
 	local dX = endC.x - originC.x
 	local dY = endC.y - originC.y
 	local length = math.sqrt(dX*dX+dY*dY)
@@ -47,14 +44,27 @@ function collider.newJoint(originkey,endkey)
 	joint.dir = {
 		x = dX / length,
 		y = dY / length,
-		rad = math.atan2(y,x)
+		deg = math.deg(math.atan2(y,x))
 	}
+	
+	local jointKey = self.joints:push(joint)
+	
+	originC.jointToEndKeys[jointKey] = true
+	endC.jointToOriginKeys[jointKey] = true
 end
 
 function collider.removeJoint(self,key)
+	local freeCircles = self.freeCircles
+	
 	local joint = self.joints:remove(key)
-	self.freeCircles:push(joint[1])
-	self.freeCircles:push(joint[2])
+	local originC = freeCircles[joint.originKey]
+	local endC = freeCircles[joint.endKey]
+	
+	originC.jointToEndKeys[key] = nil
+	endC.jointToOriginKeys[key] = nil
+	
+	self.freeCircles:push(originC)
+	self.freeCircles:push(endC)
 	
 	clear(joint)
 end
@@ -66,8 +76,8 @@ end
 function collider.setJointDir(self,key,dir)
 	local joint = self.joints[key]
 	
-	local dir = math.rad(dir)
-	
-	
+	joint.dir.deg = deg
+	local deg = math.rad(deg)
+	joint.dir.x = math.cos(deg)
+	joint.dir.y = math.sin(deg)
 end
-
