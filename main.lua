@@ -22,7 +22,7 @@ end
 function love.load()
 	l = 500
 	y = -500
-	x = 900
+	x = 200
 	
 	--print(collider:newCircle(0,0,0)[1])
 	

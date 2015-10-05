@@ -241,7 +241,7 @@ function collider.getJointMagicT(self,key)
 	local t = 0.5
 	]]--
 	print(p0p1l,p1p2l)
-	return (p0p1l/p1p2l)^(1/6) * 0.5
+	return (p0p1l/p1p2l)^(1/5) * 0.5
 end
 
 function collider.getJointPointAtT(self,key,t)
