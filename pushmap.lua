@@ -1,7 +1,7 @@
 pushmap = {mt = {}}
 local mt = {}
-function mt.__call(self,t)
-	local newpushmap = t or {}
+function mt.__call(self)
+	local newpushmap = {}
 	setmetatable(newpushmap,self.mt)
 	return newpushmap
 end
