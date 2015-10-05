@@ -312,8 +312,8 @@ function collider.getJointRenderPoints(self,key)
 	
 	
 	--magic tricks.
-	local mx = b(joint.p0.x,joint.p1.x,joint.p2.x,0.5)
-	local my = b(joint.p0.y,joint.p1.y,joint.p2.y,0.5)
+	--local mx = b(joint.p0.x,joint.p1.x,joint.p2.x,t)
+	--local my = b(joint.p0.y,joint.p1.y,joint.p2.y,t)
 	
 	--[[local p0p1x = joint.p1.x - joint.p0.x
 	local p0p1y = joint.p1.y - joint.p0.y
@@ -333,25 +333,40 @@ function collider.getJointRenderPoints(self,key)
 	local sx = x2 - x1
 	local sy = y2 - y1
 	local sl = math.sqrt(sx * sx + sy * sy)
+	sl = math.pow(sl,t)*2
 	--print(sl)
 	
+	local t1 = t
+	local t2 = 1 - t
+	local tl = math.abs(.5 - t)
 	
+	t1 = t1-tl
+	t2 = t2+tl
 	
 	table.insert(points,joint.p0.x)
 	table.insert(points,joint.p0.y)
-	local ii = sl/2
+	local ii = sl*t1
 	local i = 1
 	while i < ii do
-		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,i/ii/2))
-		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,i/ii/2))
+		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,(i/ii)*t1))
+		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,(i/ii)*t1))
 		i = i + 1
 	end
-	table.insert(points,mx)
-	table.insert(points,my)
+	
+	local ii = sl*t2 - ii--sl*(1-t)
+	local i = 1
+	while i < ii do
+		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,(i/ii)*(t2-t1)+t1))
+		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,(i/ii)*(t2-t1)+t1))
+		i = i + 1
+	end
+	--table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,t))
+	--table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,t))
+	ii = sl - ii
 	i = 1
 	while i < ii do
-		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,i/ii/2+0.5))
-		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,i/ii/2+0.5))
+		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,(i/ii)*t1+t2))
+		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,(i/ii)*t1+t2))
 		i = i + 1
 	end
 	table.insert(points,joint.p2.x)

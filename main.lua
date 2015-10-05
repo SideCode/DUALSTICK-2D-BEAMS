@@ -20,8 +20,8 @@ function love.mousepressed( x, y, button )
 end
 
 function love.load()
-	l = 1000
-	y = -600
+	l = 500
+	y = -500
 	x = 1000
 	
 	--print(collider:newCircle(0,0,0)[1])
@@ -57,9 +57,9 @@ function love.draw()
 	love.graphics.clear()
 	love.graphics.setColor(255,255,255,255*0.5)
 	love.graphics.print("#Of Line Segments: " .. #drawbaby/2)
-	love.graphics.setLineStyle("rough")
+	--love.graphics.setLineStyle("rough")
 	love.graphics.line(drawbaby)
-	love.graphics.setColor(255,0,0)
+	love.graphics.setColor(255,0,0,0.5*255)
 	for i = 1,#drawbaby-1,2 do
 		love.graphics.point(drawbaby[i],drawbaby[i+1])
 	end
@@ -71,7 +71,7 @@ function love.draw()
 	x1 = debugbaby[1]
 	love.graphics.setColor(0,255,0,0.1*255)
 	love.graphics.line(debugbaby)
-	love.graphics.setColor(0,255,0)
+	--love.graphics.setColor(0,255,0)
 	love.graphics.line(collider:getJointTangent(jointKey,t))
 	love.graphics.print("\nt: "..t)
 	--love.graphics.line(collider:drawthing(jointKey))
