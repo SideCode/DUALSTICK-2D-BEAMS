@@ -1,12 +1,13 @@
 pushmap = {mt = {}}
-
-function pushmap.__call(t)
+local mt = {}
+function mt.__call(self,t)
 	local newpushmap = t or {}
-	setmetatable(newpushmap,pushmap.mt)
+	setmetatable(newpushmap,self.mt)
 	return newpushmap
 end
+setmetatable(pushmap,mt)
 
-function pushmap.mt.free(self)
+function pushmap.free(self)
 	for i,t in ipairs(self) do
 		self[i][1][1] = nil
 		self[i][1] = nil
@@ -16,16 +17,17 @@ function pushmap.mt.free(self)
 	return nil
 end
 
-function pushmap.mt.push(self,value)
+function pushmap.push(self,value)
 	local key = {#self + 1}
 	local pair = {key,value}
 
 	table.insert(self,pair)
 	
+	print(tostring(self).." pushed "..tostring(value).." into index "..key[1])
 	return key
 end
 
-function pushmap.mt.remove(self,key)
+function pushmap.remove(self,key)
 	local lastIndex = #self
 	local keyIndex = key[1]
 	local value = self[keyIndex]
@@ -39,6 +41,7 @@ function pushmap.mt.remove(self,key)
 		self[keyIndex] = nil
 	end
 
+	--clears key
 	key[1] = nil
 
 	table.setn(self,#self-1)
@@ -48,8 +51,13 @@ end
 
 function pushmap.mt.__index(self,key)
 	if type(key) == "number" then
-		return self[key]
+		return rawget(self,key)[2]
 	end
 	
-	return self[key[2]]
+	if type(key) == "string" then
+		return pushmap[key]
+	end
+	
+	print(tostring(self).." indexed "..key[1].." and got "..tostring(rawget(self,key[1])))
+	return rawget(self,key[1])[2]
 end
