@@ -23,7 +23,7 @@ function pushmap.push(self,value)
 
 	table.insert(self,pair)
 	
-	print(tostring(self).." pushed "..tostring(value).." into index "..key[1])
+	--print(tostring(self).." pushed "..tostring(value).." into index "..key[1])
 	return key
 end
 
@@ -58,6 +58,6 @@ function pushmap.mt.__index(self,key)
 		return pushmap[key]
 	end
 	
-	print(tostring(self).." indexed "..key[1].." and got "..tostring(rawget(self,key[1])))
+	--print(tostring(self).." indexed "..key[1].." and got "..tostring(rawget(self,key[1])))
 	return rawget(self,key[1])[2]
 end

@@ -222,6 +222,16 @@ function collider.getJointMagicT(self,key)
 	local p1x2 = p1x1 * -p0p2xu + p1y1 * p0p2yu
 	
 	return p1x2 / p0p2x]]--
+	
+	local p0p1x = joint.p1.x - joint.p0.x
+	local p0p1y = joint.p1.y - joint.p0.y
+	local p0p1l = p0p1x^2 + p0p1y^2
+	local p1p2x = joint.p2.x - joint.p1.x
+	local p1p2y = joint.p2.y - joint.p1.y
+	local p1p2l = p1p2x^2 + p1p2y^2
+	
+	--[[
+	
 	local x = b(joint.p0.x,joint.p1.x,joint.p2.x,0.5)
 	local y = b(joint.p0.y,joint.p1.y,joint.p2.y,0.5)
 	x = (x - joint.p0.x) / (joint.p2.x - joint.p0.x)
@@ -229,7 +239,9 @@ function collider.getJointMagicT(self,key)
 	
 	
 	local t = 0.5
-	return t
+	]]--
+	print(p0p1l,p1p2l)
+	return (p0p1l/p1p2l)^(1/6) * 0.5
 end
 
 function collider.getJointPointAtT(self,key,t)
@@ -321,7 +333,7 @@ function collider.getJointRenderPoints(self,key)
 	local sx = x2 - x1
 	local sy = y2 - y1
 	local sl = math.sqrt(sx * sx + sy * sy)
-	print(sl)
+	--print(sl)
 	
 	
 	

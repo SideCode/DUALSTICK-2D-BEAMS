@@ -20,9 +20,9 @@ function love.mousepressed( x, y, button )
 end
 
 function love.load()
-	l = 300
+	l = 1000
 	y = -600
-	x = 400
+	x = 1000
 	
 	--print(collider:newCircle(0,0,0)[1])
 	
@@ -38,7 +38,9 @@ function love.load()
 		local ft = 1 - t
 		return ft*ft*p0 + 2*ft*t*p1 + t*t*p2
 	end
-	t = (x/(x+l) * 0.5)^2 + 0.5 --collider:getJointMagicT(jointKey)--0.5--1/2 + (x < 0 and -1 or 1) * (x/(l*2))^2
+	local z = math.abs(l/2 + x)
+	local zz = math.abs(l - z)
+	t = collider:getJointMagicT(jointKey)--0.5--1/2 + (x < 0 and -1 or 1) * (x/(l*2))^2
 	--t = 0.5--1/2 + (x < 0 and -1 or 1) * (x/(l*2))^2
 	--bebugbaby = 
 end
