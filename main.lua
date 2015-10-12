@@ -67,12 +67,16 @@ function love.draw()
 	for i = 1,#debugbaby-1,2 do
 		love.graphics.circle("fill",debugbaby[i],debugbaby[i+1],3)
 	end
+	love.graphics.print("\nt: "..t)
+	local x, y = collider:getJointPointAtT(jointKey,t)
+	love.graphics.circle("fill",x,y,3)
 	
 	x1 = debugbaby[1]
 	love.graphics.setColor(0,255,0,0.1*255)
 	love.graphics.line(debugbaby)
+	
 	--love.graphics.setColor(0,255,0)
 	love.graphics.line(collider:getJointTangent(jointKey,t))
-	love.graphics.print("\nt: "..t)
+	
 	--love.graphics.line(collider:drawthing(jointKey))
 end

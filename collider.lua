@@ -133,8 +133,23 @@ function offsetJointBezier(joint,t)
 end
 
 local function b(p0,p1,p2,t)
-	local ft = 1 - t
-	return ft*ft*p0 + 2*ft*t*p1 + t*t*p2
+	--local t = (t - .5) * 2
+	--return (1 - t)^2
+	--local ft = 1 - t
+	--return p1 + (1-math.sqrt((1-t)^2)) * (t < 0 and p0 - p1 or p2 - p1)
+	--c = p2 - p0
+	
+	--t = t * 2
+	--if t < 1 then
+	--	return -c / 2 * (math.sqrt(1 - t * t) - 1) + p0
+	--end
+   -- t = t - 2
+    
+	--return c / 2 * (math.sqrt(1 - t * t) + 1) + p0
+	--local ft = t
+	--ft = math.sqrt(1 - t*t)
+	local ft = math.sqrt(1 - t*t)--1 - t
+	return (math.acos(t) * (p2 - p0) + p0) * (p1 - p0)/(p2 - p0) + p0
 end
 local function bP(p0,p1,p2,t)
 	local t2 = 2 * t
@@ -343,10 +358,10 @@ function collider.getJointRenderPoints(self,key)
 	t1 = t1-tl
 	t2 = t2+tl
 	
-	table.insert(points,joint.p0.x)
-	table.insert(points,joint.p0.y)
+	--table.insert(points,joint.p0.x)
+	--table.insert(points,joint.p0.y)
 	local ii = sl*t1
-	local i = 1
+	local i = 0
 	while i < ii do
 		table.insert(points,b(joint.p0.x,joint.p1.x,joint.p2.x,(i/ii)*t1))
 		table.insert(points,b(joint.p0.y,joint.p1.y,joint.p2.y,(i/ii)*t1))
