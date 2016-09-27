@@ -26,7 +26,8 @@ function love.load(arg)
 	--love.window.setPosition(0,30)
 	buffer = love.graphics.newCanvas()
 	canvas = love.graphics.newCanvas()
-	canvas:clear()
+  love.graphics.setCanvas(canvas)
+  love.graphics.clear()
 	
 	--canvas:setWrap("repeat","repeat")
     mode7 = love.graphics.newShader([[
@@ -156,10 +157,10 @@ function love.update(dt)
 		easer:update(dt)
 		
 		if(easer:get(snaptimer) == 1 and (easer:get(rot)+180 - easer:get(innerrot)) % 360 < 1)then
-			canvas:clear()
 			easer:setPos(scale,0)
 		
 			love.graphics.setCanvas(canvas)
+      love.graphics.clear()
 			love.graphics.setColor(255,255,255)
 			love.graphics.setBlendMode("replace")
 			love.graphics.draw(buffer)
@@ -217,6 +218,12 @@ function love.update(dt)
 			leftstick.y = 1080 - radius
 			dir = math.random() < 1/5 and dir or -dir
 			hue = tlz.flipDir(hue,1,-1)
+		end
+
+		if input:isDown(1,"rightshoulder") and not input:isDown(1,"leftshoulder") then
+			radius = radius + 30
+		elseif not input:isDown(1,"leftshoulder") and input:isDown(1,"rightshoulder") then
+			radius = radius - 30
 		end
 		
 		mode7:send("originX",rightstick.x)
