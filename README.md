@@ -1,5 +1,1 @@
-# DualStick 2D | Beams
-
-https://itch.io/jam/dualstick-2d
-
-i.i
+The emergent result of building up some helper libs for LOVE2D projects.
