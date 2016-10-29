@@ -70,7 +70,9 @@ input._gamepad = {
 			leftx = 0.2,
 			lefty = 0.2,
 			rightx = 0.2,
-			righty = 0.2
+			righty = 0.2,
+      triggerleft = 0,
+      triggerright = 0
 		}
 	}
 }
