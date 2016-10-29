@@ -89,7 +89,7 @@ function love.joystickremoved(joystick)
 end
 
 debug = false
-paused = true
+paused = false
 function love.keypressed(key,r)
 	if key == "f4" then
 		love.window.setFullscreen(not love.window.getFullscreen())
