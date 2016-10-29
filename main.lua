@@ -114,10 +114,9 @@ function input.pressed(player,button)
 	if(player == 1)then
 		if(button == "rightshoulder")then
 			easer:setPos(scale,0)
-
-			canvas:clear()
 			
 			love.graphics.setCanvas(canvas)
+      love.graphics.clear()
 			love.graphics.setColor(255,255,255)
 			love.graphics.setBlendMode("replace")
 			love.graphics.draw(buffer)
@@ -220,11 +219,8 @@ function love.update(dt)
 			hue = tlz.flipDir(hue,1,-1)
 		end
 
-		if input:isDown(1,"rightshoulder") and not input:isDown(1,"leftshoulder") then
-			radius = radius + 30
-		elseif not input:isDown(1,"leftshoulder") and input:isDown(1,"rightshoulder") then
-			radius = radius - 30
-		end
+		rad = rad + input:getAxis(1,"triggerright")
+    rad = rad - input:getAxis(1,"triggerleft")
 		
 		mode7:send("originX",rightstick.x)
 		mode7:send("originY",rightstick.y)
