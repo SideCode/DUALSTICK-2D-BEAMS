@@ -22,11 +22,11 @@ local input = require("input")
 debugstring = ""
 math.randomseed( tonumber(tostring(os.time()):reverse():sub(1,6)) )
 function love.load(arg)
-	love.graphics.setBackgroundColor(255, 255, 255)
 	--love.window.setPosition(0,30)
 	buffer = love.graphics.newCanvas()
 	canvas = love.graphics.newCanvas()
   love.graphics.setCanvas(canvas)
+  love.graphics.setBackgroundColor(0,0,0,0)
   love.graphics.clear()
 	
 	--canvas:setWrap("repeat","repeat")
@@ -67,7 +67,7 @@ function love.load(arg)
 			vec4 texcolor = Texel(texture, texture_coords);
 			
 			if(x2*x2 + y2*y2 < radius * radius){
-				if(texcolor.a == 1){
+				if(texcolor.a == 0 || texcolor.a == 1){
 					texcolor.rgba = vec4(1);
 				}else if(texcolor.a != 0){
 					texcolor.a = 1;
@@ -143,9 +143,9 @@ hue2 = easer:new(0,360,360/23,{loop = "linear"})
 lasthue = 90
 dir = 1
 sop = 0
-rot = easer:new(0+90,360*2+90,360*2,{loop = "linear"})
-innerrot = easer:new(0+90,360+90,360/7,{loop = "linear"})
-spintimer = easer:new(0,90+10,90+10,{loop = "linear"})
+rot = easer:new(0+90,360*2+90,60*60*2,{loop = "linear"})
+innerrot = easer:new(0+90,360+90,60,{loop = "linear"})
+spintimer = easer:new(0,90+10,60*60/4,{loop = "linear"})
 rdir = 0
 rad = 300
 radius = 24
@@ -158,8 +158,8 @@ function love.update(dt)
 		if(easer:get(snaptimer) == 1 and (easer:get(rot)+180 - easer:get(innerrot)) % 360 < 1)then
 			easer:setPos(scale,0)
 		
-			love.graphics.setCanvas(canvas)
       love.graphics.clear()
+			love.graphics.setCanvas(canvas)
 			love.graphics.setColor(255,255,255)
 			love.graphics.setBlendMode("replace")
 			love.graphics.draw(buffer)
@@ -246,8 +246,7 @@ function love.draw()
 	--debugstring = debugstring .. "c:" .. c[1] .. "\t" .. c[2] .. "\t" .. c[3]
 	
 	love.graphics.setCanvas(canvas)
-		--love.graphics.setColor(255,255,255)
-		--canvas:clear()
+		--love.graphics.setColor(255,255,255,255)
 		love.graphics.setColor(c)
 
 		love.graphics.circle("fill", leftstick.x, leftstick.y, 24, 100)
